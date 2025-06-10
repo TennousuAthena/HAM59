@@ -158,7 +158,26 @@ const QuestionBank = ({ questions }) => {
       passed,
       passMark: examConfig.passMark,
     });
-  }, [answers, filteredQuestions, category]);
+
+    // Save wrong answers from the exam
+    if (isExamMode) {
+      filteredQuestions.forEach((question, index) => {
+        const userAnswer = answers[index];
+        if (userAnswer === undefined) return; // Skip unanswered
+
+        const examSeed = getRandomSeed("exam");
+        const questionSpecificSeed = `${examSeed}_${question.id}`;
+        const shuffledOpts = shuffleOptions(
+          question.options,
+          question.correct_answer,
+          questionSpecificSeed
+        );
+        if (userAnswer !== shuffledOpts.correctAnswer) {
+          saveWrongAnswer(question.id);
+        }
+      });
+    }
+  }, [answers, filteredQuestions, category, isExamMode]);
 
   const navigateToQuestion = useCallback(
     (index) => {
@@ -254,7 +273,6 @@ const QuestionBank = ({ questions }) => {
   const startExam = () => {
     setExamStarted(true);
     setAnswers({});
-    clearWrongAnswers();
   };
 
   if (!currentQuestion) {
