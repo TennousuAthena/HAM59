@@ -1,15 +1,31 @@
 // Utility functions for the amateur radio question bank platform
 
 export const loadQuestions = async () => {
-  try {
-    const response = await fetch("/data/processed_questions.json");
+  const questionSources = [
+    "/data/processed_questions_compressed.json",
+    "https://file-cdn.qmcmc.cn/assets/data/processed_questions_compressed.json",
+    "https://raw.githubusercontent.com/TennousuAthena/HAM59/refs/heads/master/public/data/processed_questions_compressed.json",
+    "https://cdn.jsdelivr.net/gh/TennousuAthena/HAM59@master/public/data/processed_questions_compressed.json",
+  ];
+
+  const fetcher = async (url) => {
+    const response = await fetch(url);
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      throw new Error(`HTTP error from ${url}: ${response.status}`);
     }
-    const data = await response.json();
+    return response.json();
+  };
+
+  try {
+    const promises = questionSources.map(fetcher);
+    const data = await Promise.any(promises);
     return Array.isArray(data) ? data : [];
   } catch (error) {
-    console.error("Error loading questions:", error);
+    console.error("All question sources failed:", error);
+    /* global AggregateError */
+    if (error instanceof AggregateError) {
+      console.error("Individual errors:", error.errors);
+    }
     throw error;
   }
 };
