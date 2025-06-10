@@ -1,0 +1,310 @@
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import QuestionCard from "./QuestionCard";
+import ProgressBar from "./ProgressBar";
+import ResultsModal from "./ResultsModal";
+import NotesSection from "./NotesSection";
+import {
+  shuffleArray,
+  shuffleOptions,
+  getRandomSeed,
+  saveAnswer,
+  getWrongAnswers,
+  saveWrongAnswer,
+  clearWrongAnswers,
+  saveProgress,
+} from "../utils/utils";
+
+const QuestionBank = ({ questions }) => {
+  const { mode, category, questionId } = useParams();
+  const navigate = useNavigate();
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [selectedAnswer, setSelectedAnswer] = useState("");
+  const [showAnswer, setShowAnswer] = useState(false);
+  const [isCorrect, setIsCorrect] = useState(null);
+  const [answers, setAnswers] = useState({});
+  const [showResults, setShowResults] = useState(false);
+  const [examStarted, setExamStarted] = useState(false);
+
+  const isExamMode = window.location.pathname.includes("/exam/");
+  const isPracticeMode = !isExamMode;
+
+  // Filter and shuffle questions based on mode
+  const filteredQuestions = useMemo(() => {
+    if (!questions || !Array.isArray(questions)) return [];
+
+    let filtered;
+    if (mode === "retry") {
+      const wrongAnswerIds = getWrongAnswers();
+      filtered = questions.filter((q) => wrongAnswerIds.includes(q.id));
+    } else {
+      filtered = questions.filter((q) => {
+        if (!q.category || !Array.isArray(q.category)) return false;
+        return q.category.includes(category);
+      });
+    }
+
+    const seed = getRandomSeed(isExamMode ? "exam" : "practice");
+
+    if (mode === "random" || isExamMode) {
+      filtered = shuffleArray([...filtered], seed);
+    }
+
+    if (isExamMode) {
+      filtered = filtered.slice(0, 50);
+    }
+
+    return filtered;
+  }, [questions, category, mode, isExamMode]);
+
+  const currentQuestion = filteredQuestions[currentQuestionIndex];
+  const shuffledOptions = useMemo(() => {
+    if (!currentQuestion) return {};
+    const seed = getRandomSeed(isExamMode ? "exam" : "practice");
+    const questionSpecificSeed = `${seed}_${currentQuestion.id}`;
+    return shuffleOptions(
+      currentQuestion.options,
+      currentQuestion.correct_answer,
+      questionSpecificSeed
+    );
+  }, [currentQuestion, isExamMode]);
+
+  useEffect(() => {
+    saveProgress(mode, category, questionId);
+  }, [mode, category, questionId]);
+
+  useEffect(() => {
+    // Reset state when mode or category changes
+    setCurrentQuestionIndex(0);
+    setAnswers({});
+    setSelectedAnswer("");
+    setShowAnswer(false);
+    setIsCorrect(null);
+  }, [mode, category]);
+
+  useEffect(() => {
+    const qId = parseInt(questionId);
+    if (!isNaN(qId) && qId > 0 && qId <= filteredQuestions.length) {
+      setCurrentQuestionIndex(qId - 1);
+    }
+  }, [questionId, filteredQuestions.length]);
+
+  useEffect(() => {
+    setSelectedAnswer("");
+    setShowAnswer(false);
+    setIsCorrect(null);
+  }, [currentQuestionIndex]);
+
+  const calculateResults = useCallback(() => {
+    let correctCount = 0;
+    const examSeed = getRandomSeed("exam");
+    filteredQuestions.forEach((question, index) => {
+      const userAnswer = answers[index];
+      const questionSpecificSeed = `${examSeed}_${question.id}`;
+      const shuffledOpts = shuffleOptions(
+        question.options,
+        question.correct_answer,
+        questionSpecificSeed
+      );
+      if (userAnswer === shuffledOpts.correctAnswer) {
+        correctCount++;
+      }
+    });
+
+    const passed = correctCount >= 40;
+    setShowResults({ correctCount, total: filteredQuestions.length, passed });
+  }, [answers, filteredQuestions]);
+
+  const navigateToQuestion = useCallback(
+    (index) => {
+      const newQuestionId = index + 1;
+      const basePath = isExamMode ? "/exam" : `/practice/${mode}`;
+      navigate(`${basePath}/${category}/${newQuestionId}`);
+    },
+    [isExamMode, mode, category, navigate]
+  );
+
+  const handleNext = useCallback(() => {
+    if (currentQuestionIndex < filteredQuestions.length - 1) {
+      navigateToQuestion(currentQuestionIndex + 1);
+    } else if (isExamMode) {
+      calculateResults();
+    }
+  }, [
+    currentQuestionIndex,
+    filteredQuestions.length,
+    isExamMode,
+    navigateToQuestion,
+    calculateResults,
+  ]);
+
+  const handlePrevious = useCallback(() => {
+    if (currentQuestionIndex > 0 && isPracticeMode) {
+      navigateToQuestion(currentQuestionIndex - 1);
+    }
+  }, [currentQuestionIndex, navigateToQuestion, isPracticeMode]);
+
+  const handleAnswerSelect = useCallback(
+    (answer) => {
+      if (showAnswer && isPracticeMode) return;
+
+      setSelectedAnswer(answer);
+
+      if (isPracticeMode) {
+        const correct = shuffledOptions.correctAnswer === answer;
+        setIsCorrect(correct);
+        setShowAnswer(true);
+
+        if (!correct) {
+          saveWrongAnswer(currentQuestion.id);
+        }
+      }
+
+      setAnswers((prev) => ({
+        ...prev,
+        [currentQuestionIndex]: answer,
+      }));
+    },
+    [
+      showAnswer,
+      isPracticeMode,
+      shuffledOptions,
+      currentQuestion,
+      currentQuestionIndex,
+    ]
+  );
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (["TEXTAREA", "INPUT"].includes(event.target.tagName)) {
+        return;
+      }
+
+      switch (event.code) {
+        case "ArrowRight":
+          handleNext();
+          break;
+        case "ArrowLeft":
+          handlePrevious();
+          break;
+        case "Digit1":
+        case "Digit2":
+        case "Digit3":
+        case "Digit4":
+          const optionKeys = Object.keys(shuffledOptions.options || {});
+          const keyIndex = parseInt(event.code.replace("Digit", ""), 10) - 1;
+          if (keyIndex >= 0 && keyIndex < optionKeys.length) {
+            handleAnswerSelect(optionKeys[keyIndex]);
+          }
+          break;
+        default:
+          break;
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleNext, handlePrevious, handleAnswerSelect, shuffledOptions.options]);
+
+  const startExam = () => {
+    setExamStarted(true);
+    setAnswers({});
+    clearWrongAnswers();
+  };
+
+  if (!currentQuestion) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">
+          <p className="text-gray-600">没有找到题目</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isExamMode && !examStarted) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-8 text-center">
+          <h2 className="text-2xl font-bold mb-4">模拟考试</h2>
+          <p className="text-gray-600 mb-2">• 总题数：50题</p>
+          <p className="text-gray-600 mb-2">• 及格线：40题</p>
+          <p className="text-gray-600 mb-6">• 题库类别：{category}类</p>
+          <button
+            onClick={startExam}
+            className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+          >
+            开始考试
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-6">
+      <ProgressBar
+        current={currentQuestionIndex + 1}
+        total={filteredQuestions.length}
+        mode={isExamMode ? "exam" : mode}
+        category={category}
+      />
+
+      <div className="max-w-4xl mx-auto">
+        <QuestionCard
+          question={currentQuestion}
+          shuffledOptions={shuffledOptions}
+          selectedAnswer={selectedAnswer}
+          onAnswerSelect={handleAnswerSelect}
+          showAnswer={showAnswer && isPracticeMode}
+          isCorrect={isCorrect}
+          questionNumber={currentQuestionIndex + 1}
+          totalQuestions={filteredQuestions.length}
+        />
+
+        {isPracticeMode && <NotesSection questionId={currentQuestion.id} />}
+
+        <div className="flex justify-between mt-6">
+          {isPracticeMode && (
+            <button
+              onClick={handlePrevious}
+              disabled={currentQuestionIndex === 0}
+              className="px-4 py-2 bg-gray-500 text-white rounded disabled:bg-gray-300 hover:bg-gray-600 transition-colors"
+            >
+              上一题
+            </button>
+          )}
+
+          <div className="flex-1"></div>
+
+          <button
+            onClick={handleNext}
+            className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors"
+          >
+            {currentQuestionIndex === filteredQuestions.length - 1 && isExamMode
+              ? "提交答案"
+              : "下一题"}
+          </button>
+        </div>
+      </div>
+
+      {showResults && (
+        <ResultsModal
+          results={showResults}
+          onClose={() => {
+            setShowResults(false);
+            navigate("/");
+          }}
+          onRestart={() => {
+            setShowResults(false);
+            setAnswers({});
+            setCurrentQuestionIndex(0);
+            navigateToQuestion(0);
+          }}
+        />
+      )}
+    </div>
+  );
+};
+
+export default QuestionBank;
