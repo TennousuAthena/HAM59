@@ -15,6 +15,27 @@ import {
   saveProgress,
 } from "../utils/utils";
 
+const EXAM_CONFIG = {
+  A: {
+    totalQuestions: 30,
+    passMark: 25,
+    timeLimit: 40 * 60,
+    timeLimitMinutes: 40,
+  },
+  B: {
+    totalQuestions: 50,
+    passMark: 40,
+    timeLimit: 60 * 60,
+    timeLimitMinutes: 60,
+  },
+  C: {
+    totalQuestions: 80,
+    passMark: 60,
+    timeLimit: 90 * 60,
+    timeLimitMinutes: 90,
+  },
+};
+
 const QuestionBank = ({ questions }) => {
   const { mode, category, questionId } = useParams();
   const navigate = useNavigate();
@@ -25,9 +46,11 @@ const QuestionBank = ({ questions }) => {
   const [answers, setAnswers] = useState({});
   const [showResults, setShowResults] = useState(false);
   const [examStarted, setExamStarted] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(null);
 
   const isExamMode = window.location.pathname.includes("/exam/");
   const isPracticeMode = !isExamMode;
+  const examConfig = EXAM_CONFIG[category] || EXAM_CONFIG.B;
 
   // Filter and shuffle questions based on mode
   const filteredQuestions = useMemo(() => {
@@ -51,7 +74,7 @@ const QuestionBank = ({ questions }) => {
     }
 
     if (isExamMode) {
-      filtered = filtered.slice(0, 50);
+      filtered = filtered.slice(0, examConfig.totalQuestions);
     }
 
     return filtered;
@@ -95,6 +118,23 @@ const QuestionBank = ({ questions }) => {
     setIsCorrect(null);
   }, [currentQuestionIndex]);
 
+  useEffect(() => {
+    if (isExamMode && examStarted) {
+      setTimeLeft(examConfig.timeLimit);
+      const timer = setInterval(() => {
+        setTimeLeft((prevTime) => {
+          if (prevTime <= 1) {
+            clearInterval(timer);
+            calculateResults();
+            return 0;
+          }
+          return prevTime - 1;
+        });
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [isExamMode, examStarted, category]);
+
   const calculateResults = useCallback(() => {
     let correctCount = 0;
     const examSeed = getRandomSeed("exam");
@@ -111,9 +151,14 @@ const QuestionBank = ({ questions }) => {
       }
     });
 
-    const passed = correctCount >= 40;
-    setShowResults({ correctCount, total: filteredQuestions.length, passed });
-  }, [answers, filteredQuestions]);
+    const passed = correctCount >= examConfig.passMark;
+    setShowResults({
+      correctCount,
+      total: filteredQuestions.length,
+      passed,
+      passMark: examConfig.passMark,
+    });
+  }, [answers, filteredQuestions, category]);
 
   const navigateToQuestion = useCallback(
     (index) => {
@@ -227,9 +272,16 @@ const QuestionBank = ({ questions }) => {
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-8 text-center">
           <h2 className="text-2xl font-bold mb-4">模拟考试</h2>
-          <p className="text-gray-600 mb-2">• 总题数：50题</p>
-          <p className="text-gray-600 mb-2">• 及格线：40题</p>
-          <p className="text-gray-600 mb-6">• 题库类别：{category}类</p>
+          <p className="text-gray-600 mb-2">• 题库类别：{category}类</p>
+          <p className="text-gray-600 mb-2">
+            • 总题数：{examConfig.totalQuestions}题
+          </p>
+          <p className="text-gray-600 mb-2">
+            • 及格线：{examConfig.passMark}题
+          </p>
+          <p className="text-gray-600 mb-6">
+            • 考试时间：{examConfig.timeLimitMinutes}分钟
+          </p>
           <button
             onClick={startExam}
             className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
@@ -241,8 +293,21 @@ const QuestionBank = ({ questions }) => {
     );
   }
 
+  const formatTime = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${minutes.toString().padStart(2, "0")}:${secs
+      .toString()
+      .padStart(2, "0")}`;
+  };
+
   return (
     <div className="container mx-auto px-4 py-6">
+      {isExamMode && timeLeft !== null && (
+        <div className="fixed bottom-4 left-4 bg-white shadow-lg rounded-full px-4 py-2 text-lg font-bold text-gray-800">
+          ⏳ {formatTime(timeLeft)}
+        </div>
+      )}
       <ProgressBar
         current={currentQuestionIndex + 1}
         total={filteredQuestions.length}
