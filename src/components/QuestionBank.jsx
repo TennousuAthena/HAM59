@@ -47,6 +47,7 @@ const QuestionBank = ({ questions }) => {
   const [showResults, setShowResults] = useState(false);
   const [examStarted, setExamStarted] = useState(false);
   const [timeLeft, setTimeLeft] = useState(null);
+  const [forceNoteExpansion, setForceNoteExpansion] = useState(false);
 
   const isExamMode = window.location.pathname.includes("/exam/");
   const isPracticeMode = !isExamMode;
@@ -110,6 +111,7 @@ const QuestionBank = ({ questions }) => {
     if (!isNaN(qId) && qId > 0 && qId <= filteredQuestions.length) {
       setCurrentQuestionIndex(qId - 1);
     }
+    setForceNoteExpansion(false);
   }, [questionId, filteredQuestions.length]);
 
   useEffect(() => {
@@ -221,6 +223,7 @@ const QuestionBank = ({ questions }) => {
 
         if (!correct) {
           saveWrongAnswer(currentQuestion.id);
+          setForceNoteExpansion(true);
         }
       }
 
@@ -345,8 +348,6 @@ const QuestionBank = ({ questions }) => {
           totalQuestions={filteredQuestions.length}
         />
 
-        {isPracticeMode && <NotesSection questionId={currentQuestion.id} />}
-
         <div className="flex justify-between mt-6">
           {isPracticeMode && (
             <button
@@ -369,6 +370,13 @@ const QuestionBank = ({ questions }) => {
               : "下一题"}
           </button>
         </div>
+
+        {isPracticeMode && (
+          <NotesSection
+            questionId={currentQuestion.id}
+            forceExpand={forceNoteExpansion}
+          />
+        )}
       </div>
 
       {showResults && (
