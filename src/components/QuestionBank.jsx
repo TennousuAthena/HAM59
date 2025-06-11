@@ -70,11 +70,9 @@ const QuestionBank = ({ questions }) => {
       filtered = questions.filter((q) => wrongAnswerIds.includes(q.id));
     } else {
       filtered = questions.filter((q) => {
-        if (!q.category || typeof q.category !== "string") return false;
-        // In FCC context, 'category' might be the question pool subelement like T1A, G1A, etc.
-        // We will match based on the first letter.
+        if (!q.id || typeof q.id !== "string") return false;
         const licenseMap = { T: "Technician", G: "General", E: "Extra" };
-        const questionClass = licenseMap[q.category.charAt(0)];
+        const questionClass = licenseMap[q.id.charAt(0)];
         return questionClass === category;
       });
     }
@@ -350,13 +348,13 @@ const QuestionBank = ({ questions }) => {
       <div className="max-w-4xl mx-auto">
         <QuestionCard
           question={currentQuestion}
-          shuffledOptions={shuffledOptions}
           selectedAnswer={selectedAnswer}
           onAnswerSelect={handleAnswerSelect}
-          showAnswer={showAnswer && isPracticeMode}
+          showAnswer={showAnswer}
           isCorrect={isCorrect}
-          questionNumber={currentQuestionIndex + 1}
-          totalQuestions={filteredQuestions.length}
+          shuffledOptions={shuffledOptions}
+          questionId={currentQuestion.id}
+          refs={currentQuestion.refs}
         />
 
         <div className="flex justify-between mt-6">

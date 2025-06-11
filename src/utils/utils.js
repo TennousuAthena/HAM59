@@ -1,32 +1,56 @@
 // Utility functions for the amateur radio question bank platform
 
 export const loadQuestions = async () => {
-  const questionSources = [
-    "/data/processed_questions_compressed.json",
-    "https://file-cdn.qmcmc.cn/assets/data/processed_questions_compressed.json",
-    "https://raw.githubusercontent.com/TennousuAthena/HAM59/refs/heads/master/public/data/processed_questions_compressed.json",
-    "https://cdn.jsdelivr.net/gh/TennousuAthena/HAM59@master/public/data/processed_questions_compressed.json",
+  const questionFiles = [
+    "/data/FCC/technician.json",
+    "/data/FCC/general.json",
+    "/data/FCC/extra.json",
   ];
 
   const fetcher = async (url) => {
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`HTTP error from ${url}: ${response.status}`);
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`HTTP error from ${url}: ${response.status}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error(`Failed to fetch ${url}:`, error);
+      return []; // Return empty array on failure to not break Promise.all
     }
-    return response.json();
   };
 
   try {
-    const promises = questionSources.map(fetcher);
-    const data = await Promise.any(promises);
-    return Array.isArray(data) ? data : [];
+    const allQuestionSets = await Promise.all(questionFiles.map(fetcher));
+    const combinedQuestions = [].concat(...allQuestionSets);
+
+    // Transform data to a consistent format if needed
+    return combinedQuestions.map((q) => {
+      // Assuming old format had options as {A:'', B:'', C:'', D:''}
+      // and correct_answer as a letter key.
+      // New format has answers as an array and correct as an index.
+      if (Array.isArray(q.answers)) {
+        const options = {};
+        const correctLetter = String.fromCharCode(65 + q.correct); // 0->A, 1->B, ...
+        q.answers.forEach((ans, i) => {
+          const letter = String.fromCharCode(65 + i);
+          options[letter] = ans;
+        });
+
+        return {
+          id: q.id,
+          question: q.question,
+          options: options,
+          correct_answer: correctLetter,
+          refs: q.refs,
+          image: q.image || "", // Ensure image property exists
+        };
+      }
+      return q; // Return as-is if format is already correct
+    });
   } catch (error) {
-    console.error("All question sources failed:", error);
-    /* global AggregateError */
-    if (error instanceof AggregateError) {
-      console.error("Individual errors:", error.errors);
-    }
-    throw error;
+    console.error("All question sources failed to load:", error);
+    throw new Error("Failed to load any question data.");
   }
 };
 

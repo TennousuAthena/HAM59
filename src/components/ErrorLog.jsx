@@ -217,6 +217,14 @@ const ErrorLog = () => {
                             General: "bg-blue-100 text-blue-700",
                             Extra: "bg-purple-100 text-purple-700",
                           };
+                          const categoryQuestions = questions.filter(
+                            (q) => getQuestionClass(q) === qClass
+                          );
+                          const questionNumber =
+                            categoryQuestions.findIndex(
+                              (q) => q.id === question.id
+                            ) + 1;
+
                           return (
                             <span
                               className={`px-2 py-1 text-xs rounded ${colors[qClass]}`}
@@ -264,7 +272,7 @@ const ErrorLog = () => {
                     <Link
                       to={`/practice/sequential/${getQuestionClass(
                         question
-                      )}/1`}
+                      )}/${question.id.substring(1)}`}
                       className="px-3 py-1 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-700 transition-colors"
                     >
                       Practice
