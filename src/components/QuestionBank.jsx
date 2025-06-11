@@ -364,7 +364,7 @@ const QuestionBank = ({ questions }) => {
               disabled={currentQuestionIndex === 0}
               className="px-4 py-2 bg-gray-500 text-white rounded disabled:bg-gray-300 hover:bg-gray-600 transition-colors"
             >
-              上一题
+              Previous
             </button>
           )}
 
@@ -375,8 +375,8 @@ const QuestionBank = ({ questions }) => {
             className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors"
           >
             {currentQuestionIndex === filteredQuestions.length - 1 && isExamMode
-              ? "提交答案"
-              : "下一题"}
+              ? "Submit Answers"
+              : "Next"}
           </button>
         </div>
 
