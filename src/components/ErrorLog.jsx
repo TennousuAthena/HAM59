@@ -13,6 +13,8 @@ const ErrorLog = () => {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const navigate = useNavigate();
 
+  const LICENSE_CLASSES = ["Technician", "General", "Extra"];
+
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
@@ -43,33 +45,37 @@ const ErrorLog = () => {
     if (wrongAnswers.length > 0) {
       navigate("/practice/retry/all/1");
     } else {
-      alert("没有错题可以重答！");
+      alert("No questions in the error log to retry!");
     }
   };
 
   const handleClearAll = () => {
-    if (window.confirm("确定要清空所有错题记录吗？")) {
+    if (
+      window.confirm("Are you sure you want to clear the entire error log?")
+    ) {
       clearWrongAnswers();
       setWrongAnswers([]);
     }
   };
 
+  const getQuestionClass = (question) => {
+    if (!question.category || typeof question.category !== "string")
+      return null;
+    const licenseMap = { T: "Technician", G: "General", E: "Extra" };
+    return licenseMap[question.category.charAt(0)];
+  };
+
   const filteredWrongAnswers =
     selectedCategory === "all"
       ? wrongAnswers
-      : wrongAnswers.filter(
-          (q) => q.category && q.category.includes(selectedCategory)
-        );
+      : wrongAnswers.filter((q) => getQuestionClass(q) === selectedCategory);
 
   const getCategoryStats = () => {
-    const stats = { A: 0, B: 0, C: 0 };
+    const stats = { Technician: 0, General: 0, Extra: 0 };
     wrongAnswers.forEach((q) => {
-      if (q.category && Array.isArray(q.category)) {
-        q.category.forEach((cat) => {
-          if (stats.hasOwnProperty(cat)) {
-            stats[cat]++;
-          }
-        });
+      const qClass = getQuestionClass(q);
+      if (qClass && stats.hasOwnProperty(qClass)) {
+        stats[qClass]++;
       }
     });
     return stats;
@@ -82,7 +88,7 @@ const ErrorLog = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">正在加载错题记录...</p>
+          <p className="text-gray-600">Loading Error Log...</p>
         </div>
       </div>
     );
@@ -93,7 +99,7 @@ const ErrorLog = () => {
       <div className="max-w-4xl mx-auto">
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
           <div className="flex items-center justify-between mb-6">
-            <h1 className="text-2xl font-bold text-gray-800">错题记录</h1>
+            <h1 className="text-2xl font-bold text-gray-800">Error Log</h1>
             <div className="flex space-x-2">
               {wrongAnswers.length > 0 && (
                 <>
@@ -101,13 +107,13 @@ const ErrorLog = () => {
                     onClick={handleRetryAll}
                     className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
                   >
-                    重练所有
+                    Retry All
                   </button>
                   <button
                     onClick={handleClearAll}
                     className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
                   >
-                    清空所有
+                    Clear All
                   </button>
                 </>
               )}
@@ -120,29 +126,35 @@ const ErrorLog = () => {
               <div className="text-2xl font-bold text-gray-800">
                 {wrongAnswers.length}
               </div>
-              <div className="text-sm text-gray-600">总错题数</div>
+              <div className="text-sm text-gray-600">Total Errors</div>
             </div>
             <div className="bg-green-50 p-4 rounded-lg text-center">
-              <div className="text-2xl font-bold text-green-600">{stats.A}</div>
-              <div className="text-sm text-gray-600">A类错题</div>
+              <div className="text-2xl font-bold text-green-600">
+                {stats.Technician}
+              </div>
+              <div className="text-sm text-gray-600">Technician</div>
             </div>
             <div className="bg-blue-50 p-4 rounded-lg text-center">
-              <div className="text-2xl font-bold text-blue-600">{stats.B}</div>
-              <div className="text-sm text-gray-600">B类错题</div>
+              <div className="text-2xl font-bold text-blue-600">
+                {stats.General}
+              </div>
+              <div className="text-sm text-gray-600">General</div>
             </div>
             <div className="bg-purple-50 p-4 rounded-lg text-center">
               <div className="text-2xl font-bold text-purple-600">
-                {stats.C}
+                {stats.Extra}
               </div>
-              <div className="text-sm text-gray-600">C类错题</div>
+              <div className="text-sm text-gray-600">Extra</div>
             </div>
           </div>
 
           {/* Category Filter */}
           <div className="flex items-center space-x-4 mb-6">
-            <span className="text-sm font-medium text-gray-700">筛选类别:</span>
+            <span className="text-sm font-medium text-gray-700">
+              Filter by Class:
+            </span>
             <div className="flex space-x-2">
-              {["all", "A", "B", "C"].map((category) => (
+              {["all", ...LICENSE_CLASSES].map((category) => (
                 <button
                   key={category}
                   onClick={() => setSelectedCategory(category)}
@@ -152,7 +164,7 @@ const ErrorLog = () => {
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
                 >
-                  {category === "all" ? "全部" : `${category}类`}
+                  {category === "all" ? "All" : category}
                 </button>
               ))}
             </div>
@@ -164,18 +176,20 @@ const ErrorLog = () => {
           <div className="bg-white rounded-lg shadow-sm p-8 text-center">
             <div className="text-gray-400 text-4xl mb-4">🎉</div>
             <h3 className="text-lg font-semibold text-gray-700 mb-2">
-              {wrongAnswers.length === 0 ? "暂无错题记录" : "该类别暂无错题"}
+              {wrongAnswers.length === 0
+                ? "No Errors Recorded"
+                : "No errors in this category"}
             </h3>
             <p className="text-gray-500 mb-4">
               {wrongAnswers.length === 0
-                ? "继续练习，错题会自动记录在这里"
-                : "切换其他类别查看错题记录"}
+                ? "Keep practicing! Incorrectly answered questions will appear here."
+                : "Switch to another category to view its error log."}
             </p>
             <Link
-              to="/practice/sequential/A/1"
+              to="/practice/sequential/Technician/1"
               className="inline-block px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
             >
-              开始练习
+              Start Practice
             </Link>
           </div>
         ) : (
@@ -195,21 +209,22 @@ const ErrorLog = () => {
                         ID: {question.id}
                       </span>
                       <div className="flex space-x-1">
-                        {question.category &&
-                          question.category.map((cat) => (
+                        {(() => {
+                          const qClass = getQuestionClass(question);
+                          if (!qClass) return null;
+                          const colors = {
+                            Technician: "bg-green-100 text-green-700",
+                            General: "bg-blue-100 text-blue-700",
+                            Extra: "bg-purple-100 text-purple-700",
+                          };
+                          return (
                             <span
-                              key={cat}
-                              className={`px-2 py-1 text-xs rounded ${
-                                cat === "A"
-                                  ? "bg-green-100 text-green-700"
-                                  : cat === "B"
-                                  ? "bg-blue-100 text-blue-700"
-                                  : "bg-purple-100 text-purple-700"
-                              }`}
+                              className={`px-2 py-1 text-xs rounded ${colors[qClass]}`}
                             >
-                              {cat}类
+                              {qClass}
                             </span>
-                          ))}
+                          );
+                        })()}
                       </div>
                     </div>
                     <h3 className="text-base font-medium text-gray-800 mb-3">
@@ -220,7 +235,7 @@ const ErrorLog = () => {
                       <div className="mb-3">
                         <img
                           src={`/assets/images/${question.image}`}
-                          alt="题目图片"
+                          alt="Question"
                           className="max-w-xs h-auto rounded border border-gray-200"
                           onError={(e) => {
                             e.target.style.display = "none";
@@ -247,10 +262,12 @@ const ErrorLog = () => {
 
                   <div className="ml-4 flex flex-col space-y-2">
                     <Link
-                      to={`/practice/sequential/${question.category[0]}/1`}
+                      to={`/practice/sequential/${getQuestionClass(
+                        question
+                      )}/1`}
                       className="px-3 py-1 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-700 transition-colors"
                     >
-                      重新练习
+                      Practice
                     </Link>
                   </div>
                 </div>

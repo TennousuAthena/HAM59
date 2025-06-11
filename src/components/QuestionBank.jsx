@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  useRef,
+} from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import QuestionCard from "./QuestionCard";
 import ProgressBar from "./ProgressBar";
@@ -13,31 +19,32 @@ import {
   saveWrongAnswer,
   clearWrongAnswers,
   saveProgress,
+  clearAllNotes,
 } from "../utils/utils";
 
 const EXAM_CONFIG = {
-  A: {
-    totalQuestions: 30,
-    passMark: 25,
-    timeLimit: 40 * 60,
+  Technician: {
+    totalQuestions: 35,
+    passMark: 26,
+    timeLimit: 40 * 60, // 40 minutes
     timeLimitMinutes: 40,
   },
-  B: {
-    totalQuestions: 50,
-    passMark: 40,
-    timeLimit: 60 * 60,
-    timeLimitMinutes: 60,
+  General: {
+    totalQuestions: 35,
+    passMark: 26,
+    timeLimit: 50 * 60, // 50 minutes
+    timeLimitMinutes: 50,
   },
-  C: {
-    totalQuestions: 80,
-    passMark: 60,
-    timeLimit: 90 * 60,
-    timeLimitMinutes: 90,
+  Extra: {
+    totalQuestions: 50,
+    passMark: 37,
+    timeLimit: 60 * 60, // 60 minutes
+    timeLimitMinutes: 60,
   },
 };
 
 const QuestionBank = ({ questions }) => {
-  const { mode, category, questionId } = useParams();
+  const { mode, category = "Technician", questionId } = useParams();
   const navigate = useNavigate();
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState("");
@@ -51,7 +58,7 @@ const QuestionBank = ({ questions }) => {
 
   const isExamMode = window.location.pathname.includes("/exam/");
   const isPracticeMode = !isExamMode;
-  const examConfig = EXAM_CONFIG[category] || EXAM_CONFIG.B;
+  const examConfig = EXAM_CONFIG[category] || EXAM_CONFIG.Technician;
 
   // Filter and shuffle questions based on mode
   const filteredQuestions = useMemo(() => {
@@ -63,8 +70,12 @@ const QuestionBank = ({ questions }) => {
       filtered = questions.filter((q) => wrongAnswerIds.includes(q.id));
     } else {
       filtered = questions.filter((q) => {
-        if (!q.category || !Array.isArray(q.category)) return false;
-        return q.category.includes(category);
+        if (!q.category || typeof q.category !== "string") return false;
+        // In FCC context, 'category' might be the question pool subelement like T1A, G1A, etc.
+        // We will match based on the first letter.
+        const licenseMap = { T: "Technician", G: "General", E: "Extra" };
+        const questionClass = licenseMap[q.category.charAt(0)];
+        return questionClass === category;
       });
     }
 
@@ -282,7 +293,7 @@ const QuestionBank = ({ questions }) => {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="text-center">
-          <p className="text-gray-600">没有找到题目</p>
+          <p className="text-gray-600">No questions found</p>
         </div>
       </div>
     );
@@ -292,22 +303,22 @@ const QuestionBank = ({ questions }) => {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-8 text-center">
-          <h2 className="text-2xl font-bold mb-4">模拟考试</h2>
-          <p className="text-gray-600 mb-2">• 题库类别：{category}类</p>
+          <h2 className="text-2xl font-bold mb-4">Exam Simulation</h2>
+          <p className="text-gray-600 mb-2">• License Class: {category}</p>
           <p className="text-gray-600 mb-2">
-            • 总题数：{examConfig.totalQuestions}题
+            • Total Questions: {examConfig.totalQuestions}
           </p>
           <p className="text-gray-600 mb-2">
-            • 及格线：{examConfig.passMark}题
+            • Passing Score: {examConfig.passMark} correct
           </p>
           <p className="text-gray-600 mb-6">
-            • 考试时间：{examConfig.timeLimitMinutes}分钟
+            • Time Limit: {examConfig.timeLimitMinutes} minutes
           </p>
           <button
             onClick={startExam}
             className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
           >
-            开始考试
+            Start Exam
           </button>
         </div>
       </div>

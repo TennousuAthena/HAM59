@@ -182,18 +182,19 @@ export const formatQuestionNumber = (num, total) => {
 
 export const getCategoryName = (category) => {
   const names = {
-    A: "A类",
-    B: "B类",
-    C: "C类",
+    Technician: "Technician Class",
+    General: "General Class",
+    Extra: "Extra Class",
   };
   return names[category] || category;
 };
 
 export const getModeName = (mode) => {
   const names = {
-    sequential: "顺序练习",
-    random: "随机练习",
-    exam: "模拟考试",
+    sequential: "Sequential Practice",
+    random: "Random Practice",
+    exam: "Exam Simulation",
+    retry: "Error Log Practice",
   };
   return names[mode] || mode;
 };
@@ -294,74 +295,68 @@ export const importNotesFromUrl = async (
   }
 };
 
-export const importSimpleNotes = async (options = { mode: "overwrite" }) => {
-  try {
-    const response = await fetch("/data/simple_note.json");
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const newNotes = await response.json();
+// Temporarily disable preset notes as they are for the wrong question bank
+// export const importSimpleNotes = async (options = { mode: 'overwrite' }) => {
+//   try {
+//     const response = await fetch("/data/simple_note.json");
+//     if (!response.ok) {
+//       throw new Error(`HTTP error! status: ${response.status}`);
+//     }
+//     const newNotes = await response.json();
 
-    let finalNotes;
-    if (options.mode === "merge") {
-      const currentNotes = JSON.parse(
-        localStorage.getItem("questionNotes") || "{}"
-      );
-      finalNotes = { ...currentNotes };
-      for (const key in newNotes) {
-        if (Object.prototype.hasOwnProperty.call(newNotes, key)) {
-          if (finalNotes[key] && finalNotes[key].trim()) {
-            finalNotes[key] = `${finalNotes[key]}\n\n---\n\n${newNotes[key]}`;
-          } else {
-            finalNotes[key] = newNotes[key];
-          }
-        }
-      }
-    } else {
-      finalNotes = newNotes;
-    }
+//     let finalNotes;
+//     if (options.mode === 'merge') {
+//       const currentNotes = JSON.parse(localStorage.getItem("questionNotes") || "{}");
+//       finalNotes = { ...currentNotes };
+//       for (const key in newNotes) {
+//         if (Object.prototype.hasOwnProperty.call(newNotes, key)) {
+//           if (finalNotes[key] && finalNotes[key].trim()) {
+//             finalNotes[key] = `${finalNotes[key]}\n\n---\n\n${newNotes[key]}`;
+//           } else {
+//             finalNotes[key] = newNotes[key];
+//           }
+//         }
+//       }
+//     } else {
+//       finalNotes = newNotes;
+//     }
 
-    localStorage.setItem("questionNotes", JSON.stringify(finalNotes));
-    return Object.keys(newNotes).length;
-  } catch (error) {
-    throw new Error("导入精简助记失败: " + error.message);
-  }
-};
+//     localStorage.setItem("questionNotes", JSON.stringify(finalNotes));
+//     return Object.keys(newNotes).length;
+//   } catch (error) {
+//     throw new Error("导入精简助记失败: " + error.message);
+//   }
+// };
 
-export const importDetailedNotes = (options = { mode: "overwrite" }) => {
-  // 详细版笔记 - 包含完整解析
-  const detailedNotes = {
-    LK0001:
-      "我国现行法律体系中专门针对无线电管理的最高法律文件是《中华人民共和国无线电管理条例》，由国务院和中央军委联合颁布。这是因为无线电频谱资源涉及军民两用，需要统一管理。",
-    LK0002:
-      "《业余无线电台管理办法》是专门针对业余无线电台管理的最高法律文件，由工业和信息化部制定。该办法规定了业余电台的设置、使用、管理等具体要求。",
-    LK0003:
-      "我国的无线电主管部门是各级无线电管理机构，包括国家无线电管理机构和地方无线电管理机构，负责无线电频率的规划、分配、使用和监督管理。",
-    // 可以添加更多预设的详细笔记
-  };
+// export const importDetailedNotes = (options = { mode: 'overwrite' }) => {
+//   // 详细版笔记 - 包含完整解析
+//   const detailedNotes = {
+//     "LK0001": "我国现行法律体系中专门针对无线电管理的最高法律文件是《中华人民共和国无线电管理条例》，由国务院和中央军委联合颁布。这是因为无线电频谱资源涉及军民两用，需要统一管理。",
+//     "LK0002": "《业余无线电台管理办法》是专门针对业余无线电台管理的最高法律文件，由工业和信息化部制定。该办法规定了业余电台的设置、使用、管理等具体要求。",
+//     "LK0003": "我国的无线电主管部门是各级无线电管理机构，包括国家无线电管理机构和地方无线电管理机构，负责无线电频率的规划、分配、使用和监督管理。",
+//     // 可以添加更多预设的详细笔记
+//   };
 
-  let finalNotes;
-  if (options.mode === "merge") {
-    const currentNotes = JSON.parse(
-      localStorage.getItem("questionNotes") || "{}"
-    );
-    finalNotes = { ...currentNotes };
-    for (const key in detailedNotes) {
-      if (Object.prototype.hasOwnProperty.call(detailedNotes, key)) {
-        if (finalNotes[key] && finalNotes[key].trim()) {
-          finalNotes[key] = `${finalNotes[key]}\n---\n${detailedNotes[key]}`;
-        } else {
-          finalNotes[key] = detailedNotes[key];
-        }
-      }
-    }
-  } else {
-    finalNotes = detailedNotes;
-  }
+//   let finalNotes;
+//   if (options.mode === 'merge') {
+//     const currentNotes = JSON.parse(localStorage.getItem("questionNotes") || "{}");
+//     finalNotes = { ...currentNotes };
+//     for (const key in detailedNotes) {
+//       if (Object.prototype.hasOwnProperty.call(detailedNotes, key)) {
+//         if (finalNotes[key] && finalNotes[key].trim()) {
+//           finalNotes[key] = `${finalNotes[key]}\n---\n${detailedNotes[key]}`;
+//         } else {
+//           finalNotes[key] = detailedNotes[key];
+//         }
+//       }
+//     }
+//   } else {
+//     finalNotes = detailedNotes;
+//   }
 
-  localStorage.setItem("questionNotes", JSON.stringify(finalNotes));
-  return Object.keys(detailedNotes).length;
-};
+//   localStorage.setItem("questionNotes", JSON.stringify(finalNotes));
+//   return Object.keys(detailedNotes).length;
+// };
 
 export const clearAllNotes = () => {
   localStorage.removeItem("questionNotes");

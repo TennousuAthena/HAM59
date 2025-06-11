@@ -38,7 +38,7 @@ function App() {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">正在加载题库...</p>
+          <p className="text-gray-600">Loading questions...</p>
         </div>
       </div>
     );
@@ -48,13 +48,13 @@ function App() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center">
         <div className="text-center bg-white p-8 rounded-lg shadow-lg">
-          <div className="text-red-500 text-xl mb-4">⚠️ 加载失败</div>
+          <div className="text-red-500 text-xl mb-4">⚠️ Load Failed</div>
           <p className="text-gray-600">{error}</p>
           <button
             onClick={() => window.location.reload()}
             className="mt-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
           >
-            重新加载
+            Reload
           </button>
         </div>
       </div>
@@ -69,7 +69,9 @@ function App() {
           <Routes>
             <Route
               path="/"
-              element={<Navigate to="/practice/sequential/A/1" replace />}
+              element={
+                <Navigate to="/practice/sequential/Technician/1" replace />
+              }
             />
             <Route
               path="/practice/:mode/:category/:questionId"

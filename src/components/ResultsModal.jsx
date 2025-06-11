@@ -2,7 +2,7 @@ import React from "react";
 
 const ResultsModal = ({ results, onClose, onRestart }) => {
   const { correctCount, total, passed, passMark } = results;
-  const percentage = Math.round((correctCount / total) * 100);
+  const percentage = total > 0 ? Math.round((correctCount / total) * 100) : 0;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -17,7 +17,9 @@ const ResultsModal = ({ results, onClose, onRestart }) => {
           </div>
 
           <h2 className="text-2xl font-bold mb-2">
-            {passed ? "恭喜通过！" : "很遗憾，未通过"}
+            {passed
+              ? "Congratulations, you passed!"
+              : "Sorry, you did not pass"}
           </h2>
 
           <div className="mb-6">
@@ -28,12 +30,12 @@ const ResultsModal = ({ results, onClose, onRestart }) => {
               <span className="text-gray-400">/{total}</span>
             </div>
             <div className="text-lg text-gray-600 mb-2">
-              正确率: {percentage}%
+              Accuracy: {percentage}%
             </div>
             <div className="text-sm text-gray-500">
               {passed
-                ? `达到及格线 (${passMark}题)`
-                : `未达到及格线 (${passMark}题)`}
+                ? `Passing score met (${passMark} correct)`
+                : `Passing score not met (${passMark} correct)`}
             </div>
           </div>
 
@@ -47,13 +49,13 @@ const ResultsModal = ({ results, onClose, onRestart }) => {
             <div className="text-sm">
               {passed ? (
                 <div className="text-green-700">
-                  <div className="font-semibold mb-1">考试通过！</div>
-                  <div>您已具备相应的业余无线电操作技能水平</div>
+                  <div className="font-semibold mb-1">Exam Passed!</div>
+                  <div>You have demonstrated the required knowledge.</div>
                 </div>
               ) : (
                 <div className="text-red-700">
-                  <div className="font-semibold mb-1">考试未通过</div>
-                  <div>建议继续学习，再次尝试考试</div>
+                  <div className="font-semibold mb-1">Exam Failed</div>
+                  <div>We recommend further study before re-attempting.</div>
                 </div>
               )}
             </div>
@@ -64,13 +66,13 @@ const ResultsModal = ({ results, onClose, onRestart }) => {
               onClick={onRestart}
               className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
             >
-              重新考试
+              Restart Exam
             </button>
             <button
               onClick={onClose}
               className="flex-1 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
             >
-              返回主页
+              Close
             </button>
           </div>
         </div>

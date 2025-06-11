@@ -9,8 +9,8 @@ import {
   exportNotes,
   importNotesFromFile,
   importNotesFromUrl,
-  importSimpleNotes,
-  importDetailedNotes,
+  // importSimpleNotes,
+  // importDetailedNotes,
   clearAllNotes,
 } from "../utils/utils";
 
@@ -78,7 +78,7 @@ const NotesSection = ({ questionId, forceExpand }) => {
   const handleSaveNote = () => {
     saveNote(questionId, note);
     setIsEditing(false);
-    showMessage("笔记已保存！", "success");
+    showMessage("Note saved!", "success");
   };
 
   const onRequestImport = (importAction) => {
@@ -101,9 +101,9 @@ const NotesSection = ({ questionId, forceExpand }) => {
   const handleExportNotes = () => {
     try {
       exportNotes();
-      showMessage("笔记导出成功！", "success");
+      showMessage("Notes exported successfully!", "success");
     } catch (error) {
-      showMessage("导出失败: " + error.message, "error");
+      showMessage("Export failed: " + error.message, "error");
     }
   };
 
@@ -121,13 +121,13 @@ const NotesSection = ({ questionId, forceExpand }) => {
         const count = await importNotesFromFile(file, options);
         const message =
           options.mode === "merge"
-            ? `成功合并导入 ${count} 条笔记！`
-            : `成功覆盖导入 ${count} 条笔记！`;
+            ? `Successfully merged ${count} notes!`
+            : `Successfully overwrote with ${count} notes!`;
         showMessage(message, "success");
         const updatedNote = getNote(questionId);
         setNote(updatedNote);
       } catch (error) {
-        showMessage("导入失败: " + error.message, "error");
+        showMessage("Import failed: " + error.message, "error");
       }
     };
 
@@ -142,7 +142,7 @@ const NotesSection = ({ questionId, forceExpand }) => {
 
   const handleUrlImportConfirm = async () => {
     if (!importUrl.trim()) {
-      showMessage("请输入有效的URL", "error");
+      showMessage("Please enter a valid URL", "error");
       return;
     }
     const urlToImport = importUrl.trim();
@@ -152,56 +152,18 @@ const NotesSection = ({ questionId, forceExpand }) => {
         const count = await importNotesFromUrl(urlToImport, options);
         const message =
           options.mode === "merge"
-            ? `成功从URL合并导入 ${count} 条笔记！`
-            : `成功从URL覆盖导入 ${count} 条笔记！`;
+            ? `Successfully merged ${count} notes from URL!`
+            : `Successfully overwrote with ${count} notes from URL!`;
         showMessage(message, "success");
         const updatedNote = getNote(questionId);
         setNote(updatedNote);
       } catch (error) {
-        showMessage("URL导入失败: " + error.message, "error");
+        showMessage("URL import failed: " + error.message, "error");
       }
     };
 
     setShowUrlDialog(false);
     setImportUrl("");
-    onRequestImport(importAction);
-  };
-
-  const handleSimpleNotesImport = () => {
-    setShowImportMenu(false);
-    const importAction = async (options) => {
-      try {
-        const count = await importSimpleNotes(options);
-        const message =
-          options.mode === "merge"
-            ? `成功合并导入 ${count} 条精简助记！`
-            : `成功覆盖导入 ${count} 条精简助记！`;
-        showMessage(message, "success");
-        const updatedNote = getNote(questionId);
-        setNote(updatedNote);
-      } catch (error) {
-        showMessage("导入失败: " + error.message, "error");
-      }
-    };
-    onRequestImport(importAction);
-  };
-
-  const handleDetailedNotesImport = () => {
-    setShowImportMenu(false);
-    const importAction = async (options) => {
-      try {
-        const count = await importDetailedNotes(options);
-        const message =
-          options.mode === "merge"
-            ? `成功合并导入 ${count} 条详解解析！`
-            : `成功覆盖导入 ${count} 条详解解析！`;
-        showMessage(message, "success");
-        const updatedNote = getNote(questionId);
-        setNote(updatedNote);
-      } catch (error) {
-        showMessage("导入失败: " + error.message, "error");
-      }
-    };
     onRequestImport(importAction);
   };
 
@@ -216,7 +178,7 @@ const NotesSection = ({ questionId, forceExpand }) => {
     setIsEditing(true);
     setIsExpanded(true);
     setClearConfirmation(false);
-    showMessage("所有笔记已清空！", "success");
+    showMessage("All notes have been cleared!", "success");
   };
 
   const showMessage = (text, type) => {
@@ -232,15 +194,15 @@ const NotesSection = ({ questionId, forceExpand }) => {
           className="flex items-center space-x-2 text-gray-700 hover:text-indigo-600 transition-colors"
         >
           <span className="text-lg">📝</span>
-          <span className="font-medium">我的笔记</span>
+          <span className="font-medium">My Notes</span>
           <span className="text-sm text-gray-500">
-            {isExpanded ? "收起" : "展开"}
+            {isExpanded ? "Collapse" : "Expand"}
           </span>
         </button>
 
-        {note && (
+        {note && !isEditing && (
           <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded">
-            已保存
+            Saved
           </span>
         )}
       </div>
@@ -263,7 +225,7 @@ const NotesSection = ({ questionId, forceExpand }) => {
             <textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="在此记录你的学习笔记、解题思路或重点知识... \n支持Markdown和LaTeX公式（例如 $P = V \times I$）。"
+              placeholder="Enter your notes here... Supports Markdown and LaTeX (e.g., $E=mc^2$)."
               className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               rows={6}
             />
@@ -271,7 +233,7 @@ const NotesSection = ({ questionId, forceExpand }) => {
             <div
               className="prose prose-indigo max-w-none p-3 border border-gray-200 rounded-lg bg-gray-50 min-h-[10rem] cursor-text"
               onDoubleClick={() => setIsEditing(true)}
-              title="双击编辑笔记"
+              title="Double-click to edit"
             >
               <ReactMarkdown
                 remarkPlugins={[remarkGfm, remarkMath]}
@@ -282,7 +244,7 @@ const NotesSection = ({ questionId, forceExpand }) => {
                   ),
                 }}
               >
-                {note || '*没有笔记，点击"编辑"开始记录吧！*'}
+                {note || "*No notes yet. Click 'Edit' to get started!*"}
               </ReactMarkdown>
             </div>
           )}
@@ -295,42 +257,36 @@ const NotesSection = ({ questionId, forceExpand }) => {
                   className="px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center space-x-1"
                 >
                   <span>📥</span>
-                  <span>导入</span>
+                  <span>Import</span>
                   <span className="text-xs">▼</span>
                 </button>
 
                 {showImportMenu && (
-                  <div className="absolute bottom-full left-0 mb-1 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+                  <div className="absolute bottom-full left-0 mb-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
                     <button
                       onClick={handleFileImport}
                       className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 first:rounded-t-lg"
                     >
-                      📁 从文件导入
+                      📁 From File...
                     </button>
                     <button
                       onClick={handleUrlImport}
                       className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
                     >
-                      🌐 从URL导入
+                      🌐 From URL...
                     </button>
-                    <button
+                    {/* <button
                       onClick={handleSimpleNotesImport}
                       className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
                     >
-                      📄 导入精简助记
-                    </button>
-                    {/* <button
-                      onClick={handleDetailedNotesImport}
-                      className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
-                    >
-                      📚 导入详解解析
+                      📄 Import Simple Notes
                     </button> */}
                     <div className="border-t border-gray-100 my-1"></div>
                     <button
                       onClick={handleClearAllNotesRequest}
                       className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 last:rounded-b-lg"
                     >
-                      🗑️ 清空所有笔记
+                      🗑️ Clear All Notes
                     </button>
                   </div>
                 )}
@@ -341,7 +297,7 @@ const NotesSection = ({ questionId, forceExpand }) => {
                 className="px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center space-x-1"
               >
                 <span>📤</span>
-                <span>导出</span>
+                <span>Export</span>
               </button>
             </div>
 
@@ -355,13 +311,13 @@ const NotesSection = ({ questionId, forceExpand }) => {
                     }}
                     className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800 transition-colors"
                   >
-                    取消
+                    Cancel
                   </button>
                   <button
                     onClick={handleSaveNote}
                     className="px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700 transition-colors"
                   >
-                    保存笔记
+                    Save Note
                   </button>
                 </>
               ) : (
@@ -370,13 +326,13 @@ const NotesSection = ({ questionId, forceExpand }) => {
                     onClick={handleClearNote}
                     className="px-3 py-1 text-sm text-gray-600 hover:text-red-600 transition-colors"
                   >
-                    清空
+                    Clear
                   </button>
                   <button
                     onClick={() => setIsEditing(true)}
                     className="px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700 transition-colors"
                   >
-                    编辑
+                    Edit
                   </button>
                 </>
               )}
@@ -398,16 +354,17 @@ const NotesSection = ({ questionId, forceExpand }) => {
       {importConfirmation.isOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-            <h3 className="text-lg font-semibold mb-4">导入选项</h3>
+            <h3 className="text-lg font-semibold mb-4">Import Options</h3>
             <p className="text-gray-600 mb-6">
-              检测到您本地已有笔记。请选择导入方式，或先导出笔记进行备份。
+              Existing notes detected. Please choose an import mode, or export
+              your current notes for backup.
             </p>
             <div className="flex justify-between items-center">
               <button
                 onClick={handleExportNotes}
                 className="px-4 py-2 text-sm text-indigo-600 font-semibold hover:bg-indigo-50 rounded-lg transition-colors"
               >
-                导出笔记
+                Export Notes
               </button>
               <div className="flex space-x-3">
                 <button
@@ -419,7 +376,7 @@ const NotesSection = ({ questionId, forceExpand }) => {
                   }
                   className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
                 >
-                  取消
+                  Cancel
                 </button>
                 <button
                   onClick={() => {
@@ -431,7 +388,7 @@ const NotesSection = ({ questionId, forceExpand }) => {
                   }}
                   className="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors"
                 >
-                  导入合并
+                  Import & Merge
                 </button>
                 <button
                   onClick={() => {
@@ -443,7 +400,7 @@ const NotesSection = ({ questionId, forceExpand }) => {
                   }}
                   className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
                 >
-                  导入覆盖
+                  Import & Overwrite
                 </button>
               </div>
             </div>
@@ -456,23 +413,24 @@ const NotesSection = ({ questionId, forceExpand }) => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
             <h3 className="text-lg font-semibold mb-4 text-red-600">
-              ⚠️ 确认清空所有笔记？
+              ⚠️ Clear All Notes?
             </h3>
             <p className="text-gray-600 mb-6">
-              此操作将<b>永久删除</b>所有题目的笔记，且无法撤销。是否继续？
+              This will <b>permanently delete</b> all notes for all questions
+              and cannot be undone. Are you sure?
             </p>
             <div className="flex justify-end space-x-3">
               <button
                 onClick={() => setClearConfirmation(false)}
                 className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
               >
-                取消
+                Cancel
               </button>
               <button
                 onClick={handleClearAllNotesConfirm}
                 className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
               >
-                确认清空
+                Confirm & Clear
               </button>
             </div>
           </div>
@@ -483,12 +441,14 @@ const NotesSection = ({ questionId, forceExpand }) => {
       {showUrlDialog && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-            <h3 className="text-lg font-semibold mb-4">从URL导入笔记</h3>
+            <h3 className="text-lg font-semibold mb-4">
+              Import Notes from URL
+            </h3>
             <input
               type="url"
               value={importUrl}
               onChange={(e) => setImportUrl(e.target.value)}
-              placeholder="请输入笔记文件的URL地址"
+              placeholder="Enter the URL of the notes file"
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent mb-4"
             />
             <div className="flex justify-end space-x-2">
@@ -499,13 +459,13 @@ const NotesSection = ({ questionId, forceExpand }) => {
                 }}
                 className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
               >
-                取消
+                Cancel
               </button>
               <button
                 onClick={handleUrlImportConfirm}
                 className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
               >
-                导入
+                Import
               </button>
             </div>
           </div>

@@ -6,12 +6,14 @@ const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
+  const LICENSE_CLASSES = ["Technician", "General", "Extra"];
+
   const getCurrentCategory = () => {
     const pathSegments = location.pathname.split("/");
-    const categoryIndex = pathSegments.findIndex((segment) =>
-      ["A", "B", "C"].includes(segment)
+    const category = pathSegments.find((segment) =>
+      LICENSE_CLASSES.includes(segment)
     );
-    return categoryIndex !== -1 ? pathSegments[categoryIndex] : "A";
+    return category || "Technician";
   };
 
   const getCurrentMode = () => {
@@ -51,12 +53,12 @@ const Header = () => {
             to="/"
             className="text-xl font-bold text-indigo-600 hover:text-indigo-800"
           >
-            📡 HAM59+ 练习平台
+            📡 HAM59@FCC
           </Link>
 
           <nav className="flex items-center space-x-4 flex-wrap">
             <div className="flex items-center space-x-2">
-              <span className="text-sm text-gray-600">练习模式:</span>
+              <span className="text-sm text-gray-600">Practice Mode:</span>
               <Link
                 to={generateModeUrl("sequential")}
                 className={`px-3 py-1 rounded text-sm transition-colors ${
@@ -65,7 +67,7 @@ const Header = () => {
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
               >
-                顺序练习
+                Sequential
               </Link>
               <Link
                 to={generateModeUrl("random")}
@@ -75,42 +77,25 @@ const Header = () => {
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
               >
-                随机练习
+                Random
               </Link>
             </div>
 
             <div className="flex items-center space-x-2">
-              <span className="text-sm text-gray-600">题库:</span>
-              <Link
-                to={generateCategoryUrl("A")}
-                className={`px-3 py-1 rounded text-sm transition-colors ${
-                  location.pathname.includes("/A/")
-                    ? "bg-green-600 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
-              >
-                A类
-              </Link>
-              <Link
-                to={generateCategoryUrl("B")}
-                className={`px-3 py-1 rounded text-sm transition-colors ${
-                  location.pathname.includes("/B/")
-                    ? "bg-green-600 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
-              >
-                B类
-              </Link>
-              <Link
-                to={generateCategoryUrl("C")}
-                className={`px-3 py-1 rounded text-sm transition-colors ${
-                  location.pathname.includes("/C/")
-                    ? "bg-green-600 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
-              >
-                C类
-              </Link>
+              <span className="text-sm text-gray-600">License Class:</span>
+              {LICENSE_CLASSES.map((level) => (
+                <Link
+                  key={level}
+                  to={generateCategoryUrl(level)}
+                  className={`px-3 py-1 rounded text-sm transition-colors ${
+                    location.pathname.includes(`/${level}/`)
+                      ? "bg-green-600 text-white"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                >
+                  {level}
+                </Link>
+              ))}
             </div>
 
             <div className="flex items-center space-x-2">
@@ -122,7 +107,7 @@ const Header = () => {
                     : "bg-red-100 text-red-700 hover:bg-red-200"
                 }`}
               >
-                模拟考试
+                Exam
               </Link>
               <Link
                 to="/errors"
@@ -132,16 +117,16 @@ const Header = () => {
                     : "bg-orange-100 text-orange-700 hover:bg-orange-200"
                 }`}
               >
-                错题记录
+                Error Log
               </Link>
             </div>
 
             <button
               onClick={handleRefreshSeed}
               className="px-3 py-1 bg-purple-100 text-purple-700 rounded text-sm hover:bg-purple-200 transition-colors"
-              title="重新生成随机种子"
+              title="Reshuffle random questions"
             >
-              🎲 打乱顺序
+              🎲 Reshuffle
             </button>
           </nav>
         </div>
