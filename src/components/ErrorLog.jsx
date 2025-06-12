@@ -253,7 +253,9 @@ const ErrorLog = () => {
 
                   <div className="ml-4 flex flex-col space-y-2">
                     <Link
-                      to={`/practice/sequential/${question.category[0]}/1`}
+                      to={`/practice/retry/all/${
+                        wrongAnswers.findIndex((q) => q.id === question.id) + 1
+                      }`}
                       className="px-3 py-1 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-700 transition-colors"
                     >
                       重新练习
