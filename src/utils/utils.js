@@ -140,6 +140,12 @@ export const saveWrongAnswer = (questionId) => {
   }
 };
 
+export const removeWrongAnswer = (questionId) => {
+  let wrongAnswers = JSON.parse(localStorage.getItem("wrongAnswers") || "[]");
+  wrongAnswers = wrongAnswers.filter((id) => id !== questionId);
+  localStorage.setItem("wrongAnswers", JSON.stringify(wrongAnswers));
+};
+
 export const getWrongAnswers = () => {
   return JSON.parse(localStorage.getItem("wrongAnswers") || "[]");
 };

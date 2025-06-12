@@ -4,6 +4,7 @@ import {
   getWrongAnswers,
   clearWrongAnswers,
   loadQuestions,
+  removeWrongAnswer,
 } from "../utils/utils";
 
 const ErrorLog = () => {
@@ -52,6 +53,11 @@ const ErrorLog = () => {
       clearWrongAnswers();
       setWrongAnswers([]);
     }
+  };
+
+  const handleRemove = (questionId) => {
+    removeWrongAnswer(questionId);
+    setWrongAnswers(wrongAnswers.filter((q) => q.id !== questionId));
   };
 
   const filteredWrongAnswers =
@@ -252,6 +258,12 @@ const ErrorLog = () => {
                     >
                       重新练习
                     </Link>
+                    <button
+                      onClick={() => handleRemove(question.id)}
+                      className="px-3 py-1 bg-green-500 text-white text-sm rounded hover:bg-green-600 transition-colors"
+                    >
+                      已掌握
+                    </button>
                   </div>
                 </div>
               </div>
