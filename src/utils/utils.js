@@ -562,3 +562,12 @@ export const getDataStatistics = () => {
     hasExamRandomSeed: !!localStorage.getItem("examRandomSeed"),
   };
 };
+
+// 自动下一题设置
+export const saveAutoNextQuestion = (enabled) => {
+  localStorage.setItem("autoNextQuestion", JSON.stringify(enabled));
+};
+
+export const getAutoNextQuestion = () => {
+  return JSON.parse(localStorage.getItem("autoNextQuestion") || "false");
+};

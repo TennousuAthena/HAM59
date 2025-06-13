@@ -13,6 +13,8 @@ import {
   saveWrongAnswer,
   clearWrongAnswers,
   saveProgress,
+  saveAutoNextQuestion,
+  getAutoNextQuestion,
 } from "../utils/utils";
 
 const EXAM_CONFIG = {
@@ -48,6 +50,9 @@ const QuestionBank = ({ questions }) => {
   const [examStarted, setExamStarted] = useState(false);
   const [timeLeft, setTimeLeft] = useState(null);
   const [forceNoteExpansion, setForceNoteExpansion] = useState(false);
+  const [autoNextQuestion, setAutoNextQuestion] = useState(
+    getAutoNextQuestion()
+  );
 
   const isExamMode = window.location.pathname.includes("/exam/");
   const isPracticeMode = !isExamMode;
@@ -210,6 +215,11 @@ const QuestionBank = ({ questions }) => {
     }
   }, [currentQuestionIndex, navigateToQuestion, isPracticeMode]);
 
+  const handleAutoNextToggle = (enabled) => {
+    setAutoNextQuestion(enabled);
+    saveAutoNextQuestion(enabled);
+  };
+
   const handleAnswerSelect = useCallback(
     (answer) => {
       if (showAnswer && isPracticeMode) return;
@@ -231,6 +241,17 @@ const QuestionBank = ({ questions }) => {
         ...prev,
         [currentQuestionIndex]: answer,
       }));
+
+      // 在考试模式下，如果开启了自动下一题，则自动进入下一题
+      if (isExamMode && autoNextQuestion) {
+        setTimeout(() => {
+          if (currentQuestionIndex < filteredQuestions.length - 1) {
+            navigateToQuestion(currentQuestionIndex + 1);
+          } else {
+            calculateResults();
+          }
+        }, 500); // 延迟500ms，让用户看到选择的答案
+      }
     },
     [
       showAnswer,
@@ -238,6 +259,11 @@ const QuestionBank = ({ questions }) => {
       shuffledOptions,
       currentQuestion,
       currentQuestionIndex,
+      isExamMode,
+      autoNextQuestion,
+      filteredQuestions.length,
+      navigateToQuestion,
+      calculateResults,
     ]
   );
 
@@ -303,6 +329,25 @@ const QuestionBank = ({ questions }) => {
           <p className="text-gray-600 mb-6">
             • 考试时间：{examConfig.timeLimitMinutes}分钟
           </p>
+
+          {/* 自动下一题设置 */}
+          <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+            <label className="flex items-center justify-center space-x-3">
+              <input
+                type="checkbox"
+                checked={autoNextQuestion}
+                onChange={(e) => handleAutoNextToggle(e.target.checked)}
+                className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+              />
+              <span className="text-gray-700 font-medium">
+                选择答案后自动下一题
+              </span>
+            </label>
+            <p className="text-sm text-gray-500 mt-2">
+              开启后，点击答案选项会自动进入下一题，无需手动点击"下一题"按钮
+            </p>
+          </div>
+
           <button
             onClick={startExam}
             className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
@@ -329,6 +374,22 @@ const QuestionBank = ({ questions }) => {
           ⏳ {formatTime(timeLeft)}
         </div>
       )}
+
+      {/* 考试模式下的自动下一题控制 */}
+      {isExamMode && examStarted && (
+        <div className="fixed bottom-4 right-4 bg-white shadow-lg rounded-lg px-4 py-2">
+          <label className="flex items-center space-x-2 text-sm">
+            <input
+              type="checkbox"
+              checked={autoNextQuestion}
+              onChange={(e) => handleAutoNextToggle(e.target.checked)}
+              className="h-3 w-3 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+            />
+            <span className="text-gray-700">自动下一题</span>
+          </label>
+        </div>
+      )}
+
       <ProgressBar
         current={currentQuestionIndex + 1}
         total={filteredQuestions.length}
