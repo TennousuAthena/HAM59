@@ -15,6 +15,7 @@ import {
   saveProgress,
   saveAutoNextQuestion,
   getAutoNextQuestion,
+  refreshRandomSeed,
 } from "../utils/utils";
 
 const EXAM_CONFIG = {
@@ -53,6 +54,7 @@ const QuestionBank = ({ questions }) => {
   const [autoNextQuestion, setAutoNextQuestion] = useState(
     getAutoNextQuestion()
   );
+  const [examSeedTrigger, setExamSeedTrigger] = useState(0);
 
   const isExamMode = window.location.pathname.includes("/exam/");
   const isPracticeMode = !isExamMode;
@@ -84,7 +86,7 @@ const QuestionBank = ({ questions }) => {
     }
 
     return filtered;
-  }, [questions, category, mode, isExamMode]);
+  }, [questions, category, mode, isExamMode, examSeedTrigger]);
 
   const currentQuestion = filteredQuestions[currentQuestionIndex];
   const shuffledOptions = useMemo(() => {
@@ -96,7 +98,7 @@ const QuestionBank = ({ questions }) => {
       currentQuestion.correct_answer,
       questionSpecificSeed
     );
-  }, [currentQuestion, isExamMode]);
+  }, [currentQuestion, isExamMode, examSeedTrigger]);
 
   useEffect(() => {
     saveProgress(mode, category, questionId);
@@ -300,8 +302,15 @@ const QuestionBank = ({ questions }) => {
   }, [handleNext, handlePrevious, handleAnswerSelect, shuffledOptions.options]);
 
   const startExam = () => {
+    // 自动打乱顺序 - 重新生成随机种子
+    refreshRandomSeed();
+
+    // 触发重新计算filteredQuestions
+    setExamSeedTrigger((prev) => prev + 1);
+
     setExamStarted(true);
     setAnswers({});
+    setCurrentQuestionIndex(0);
   };
 
   if (!currentQuestion) {
@@ -326,8 +335,11 @@ const QuestionBank = ({ questions }) => {
           <p className="text-gray-600 mb-2">
             • 及格线：{examConfig.passMark}题
           </p>
-          <p className="text-gray-600 mb-6">
+          <p className="text-gray-600 mb-2">
             • 考试时间：{examConfig.timeLimitMinutes}分钟
+          </p>
+          <p className="text-indigo-600 mb-6 font-medium">
+            • 开始考试时将自动打乱题目和选项顺序
           </p>
 
           {/* 自动下一题设置 */}
