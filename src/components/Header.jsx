@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { refreshRandomSeed, getProgress } from "../utils/utils";
+import { getProgress } from "../utils/utils";
 
 const Header = () => {
   const location = useLocation();
@@ -34,11 +34,6 @@ const Header = () => {
     const currentCategory = getCurrentCategory();
     const lastQuestionId = getProgress(mode, currentCategory);
     return `/practice/${mode}/${currentCategory}/${lastQuestionId}`;
-  };
-
-  const handleRefreshSeed = () => {
-    refreshRandomSeed();
-    window.location.reload();
   };
 
   const isActive = (path) => location.pathname.includes(path);
@@ -136,13 +131,16 @@ const Header = () => {
               </Link>
             </div>
 
-            <button
-              onClick={handleRefreshSeed}
-              className="px-3 py-1 bg-purple-100 text-purple-700 rounded text-sm hover:bg-purple-200 transition-colors"
-              title="重新生成随机种子"
+            <Link
+              to="/settings"
+              className={`px-3 py-1 rounded text-sm transition-colors ${
+                isActive("/settings")
+                  ? "bg-gray-600 text-white"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
             >
-              🎲 打乱顺序
-            </button>
+              ⚙️ 设置
+            </Link>
           </nav>
         </div>
       </div>

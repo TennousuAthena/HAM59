@@ -8,6 +8,7 @@ import {
 import QuestionBank from "./components/QuestionBank";
 import ErrorLog from "./components/ErrorLog";
 import Header from "./components/Header";
+import Settings from "./components/Settings";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { loadQuestions, initializeRandomSeed } from "./utils/utils";
 
@@ -80,6 +81,7 @@ function App() {
               element={<QuestionBank questions={questions} />}
             />
             <Route path="/errors" element={<ErrorLog />} />
+            <Route path="/settings" element={<Settings />} />
           </Routes>
         </div>
       </ErrorBoundary>
